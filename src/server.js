@@ -47,9 +47,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`User Service running on port ${PORT}`);
-  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+  
+  // if there is EXTERNAL_IP environment variable, use the external IP
+  if (process.env.EXTERNAL_IP) {
+    console.log(`API Documentation available at http://${process.env.EXTERNAL_IP}:${PORT}/api-docs`);
+    console.log(`API Endpoints: http://${process.env.EXTERNAL_IP}:${PORT}/api/users`);
+  } else {
+    console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+    console.log(`API Endpoints: http://localhost:${PORT}/api/users`);
+  }
 });
 
 module.exports = app;

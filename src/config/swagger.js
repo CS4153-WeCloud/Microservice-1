@@ -1,5 +1,16 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
+// get the server URL
+const getServerUrl = () => {
+  // if there is EXTERNAL_IP environment variable, use the external IP
+  if (process.env.EXTERNAL_IP) {
+    return `http://${process.env.EXTERNAL_IP}:3001`;
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:3001';
+};
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -14,12 +25,8 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3001',
-        description: 'Development server'
-      },
-      {
-        url: 'http://<your-gcp-vm-ip>:3001',
-        description: 'Production server (GCP)'
+        url: getServerUrl(),
+        description: process.env.NODE_ENV === 'production' ? 'Production server (GCP)' : 'Development server'
       }
     ],
     tags: [

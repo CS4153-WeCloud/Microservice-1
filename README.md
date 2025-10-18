@@ -7,7 +7,6 @@ A RESTful microservice for user management with OpenAPI documentation and MySQL 
 - ✅ Complete REST API (GET, POST, PUT, DELETE)
 - ✅ OpenAPI 3.0 documentation with Swagger UI
 - ✅ MySQL database integration
-- ✅ MVC architecture with models
 - ✅ Health check endpoint
 - ✅ Ready for GCP VM deployment
 
@@ -37,10 +36,10 @@ cp .env.example .env
 
 4. Start the server:
 ```bash
-npm run dev
+npm start
 ```
 
-5. Access the API:
+5. Access the API locally:
    - API Base: http://localhost:3001
    - API Documentation: http://localhost:3001/api-docs
    - Health Check: http://localhost:3001/health
@@ -72,81 +71,78 @@ curl -X POST http://localhost:3001/api/users \
 
 ## Database Setup
 
-The database schema is defined in the `database-repo`. To set up locally:
+The database schema is defined in the `database`. To set up locally:
 
 ```bash
-mysql -u root -p < ../database-repo/schema/user_service_schema.sql
+mysql -u root -p < ../database/schema.sql
 ```
 
-## GCP Deployment
+## GCP VM Deployment
 
-### 1. Create a VM Instance
+### Quick Setup for Team Members
 
+**1. Create VM in GCP Console**
+- Go to [GCP Console](https://console.cloud.google.com/)
+- Create VM: `user-service-vm`, `e2-medium`, `us-central1-c`
+- Enable HTTP traffic
+
+**2. SSH into VM**
 ```bash
-gcloud compute instances create user-service-vm \
-  --zone=us-central1-a \
-  --machine-type=e2-medium \
-  --image-family=ubuntu-2004-lts \
-  --image-project=ubuntu-os-cloud \
-  --tags=http-server
+gcloud compute ssh user-service-vm --zone=us-central1-c
 ```
 
-### 2. Configure Firewall
-
+**3. Install & Setup**
 ```bash
-gcloud compute firewall-rules create allow-user-service \
-  --allow=tcp:3001 \
-  --target-tags=http-server
-```
-
-### 3. Deploy Application
-
-```bash
-# SSH into VM
-gcloud compute ssh user-service-vm --zone=us-central1-a
-
-# Install Node.js
+# Install software
+sudo apt-get update
+sudo apt-get install -y git default-mysql-server
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# Clone your repo
-git clone <your-repo-url>
-cd microservice-1-user
+# Start MySQL
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# Clone repo
+git clone https://github.com/CS4153-WeCloud/Microservice-1.git
+cd Microservice-1
 
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with MySQL VM internal IP
+# Setup database
+sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS user_service_db;"
+sudo mysql -u root -e "CREATE USER IF NOT EXISTS 'user_service'@'localhost' IDENTIFIED BY 'password123';"
+sudo mysql -u root -e "GRANT ALL PRIVILEGES ON user_service_db.* TO 'user_service'@'localhost';"
+sudo mysql -u root -e "FLUSH PRIVILEGES;"
+sudo mysql -u root < database/schema.sql
 
-# Start with PM2 (process manager)
-sudo npm install -g pm2
-pm2 start src/server.js --name user-service
-pm2 save
-pm2 startup
+# Configure environment
+cp env.example .env
+# Edit .env with: DB_HOST=localhost, DB_USER=user_service, DB_PASSWORD=password123, DB_NAME=user_service_db
+
+# Start service
+npm start
 ```
 
-### 4. Connect to MySQL VM
+**4. Configure Firewall**
+- GCP Console > VPC network > Firewall
+- Create rule: `allow-user-service`, TCP:3001, Target: `http-server`
 
-Update your `.env` file with the MySQL VM's internal IP:
-
-```
-DB_HOST=<mysql-vm-internal-ip>
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=user_service_db
-```
-
-## Testing the Deployment
-
+**5. Set External IP and Test**
 ```bash
-# Get external IP
-gcloud compute instances describe user-service-vm --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
+# Get your VM's external IP
+curl ifconfig.me
 
-# Test the API
-curl http://<external-ip>:3001/health
-curl http://<external-ip>:3001/api/users
+# Set the external IP environment variable
+export EXTERNAL_IP=$(curl -s ifconfig.me)
+
+# Start the service
+npm start
+
+# Test API
+curl http://$EXTERNAL_IP:3001/health
+# Open in browser: http://$EXTERNAL_IP:3001/api-docs
 ```
 
 ## Project Structure
