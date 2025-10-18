@@ -2,6 +2,10 @@
 
 A RESTful microservice for user management with OpenAPI documentation and MySQL database integration.
 
+## Demo
+
+- Sprint 1 [link](https://www.youtube.com/watch?v=5IFi0l3WEvg)
+
 ## Features
 
 - ✅ Complete REST API (GET, POST, PUT, DELETE)
