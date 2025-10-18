@@ -43,10 +43,21 @@ cp .env.example .env
 npm start
 ```
 
-5. Access the API locally:
+5. Access the API:
    - API Base: http://localhost:3001
    - API Documentation: http://localhost:3001/api-docs
    - Health Check: http://localhost:3001/health
+
+### VM Deployment (GCP)
+
+1. Create VM in GCP Console
+
+2. Follow the detailed setup steps in the "GCP VM Deployment" section below
+
+3. Access the API:
+   - API Base: http://<YOUR_VM_IP>:3001
+   - API Documentation: http://<YOUR_VM_IP>:3001/api-docs
+   - Health Check: http://<YOUR_VM_IP>:3001/health
 
 ## API Endpoints
 
@@ -58,11 +69,26 @@ npm start
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user
 
-### Example Request
+### Example Requests
 
+**Local Development:**
 ```bash
 # Create a user
 curl -X POST http://localhost:3001/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+1234567890",
+    "status": "active"
+  }'
+```
+
+**VM Deployment:**
+```bash
+# Replace YOUR_VM_IP with your actual VM external IP
+curl -X POST http://<YOUR_VM_IP>:3001/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "email": "john@example.com",
@@ -144,15 +170,22 @@ export EXTERNAL_IP=$(curl -s ifconfig.me)
 # Start the service
 npm start
 
-# Test API
+# Test API (replace with your actual VM IP)
 curl http://$EXTERNAL_IP:3001/health
 # Open in browser: http://$EXTERNAL_IP:3001/api-docs
 ```
+
+**Important Notes:**
+- Each team member will have a different VM external IP
+- The service will automatically detect if it's running on a VM and show the correct URLs
+- Make sure to configure the firewall rule for port 3001
 
 ## Project Structure
 
 ```
 microservice-1-user/
+├── database/
+│   ├── schema.sql           # sample user schema for API testing
 ├── src/
 │   ├── config/
 │   │   ├── database.js      # MySQL connection pool
