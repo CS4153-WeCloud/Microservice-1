@@ -77,6 +77,23 @@ const options = {
               description: 'User account status',
               example: 'active'
             },
+            role: {
+              type: 'string',
+              enum: ['student', 'staff', 'faculty', 'other'],
+              description: 'User role',
+              example: 'student'
+            },
+            homeArea: {
+              type: 'string',
+              description: 'Home area (e.g., Flushing, Jersey City)',
+              example: 'Flushing'
+            },
+            preferredDepartureTime: {
+              type: 'string',
+              format: 'time',
+              description: 'Preferred departure time (HH:mm:ss)',
+              example: '08:00:00'
+            },
             createdAt: {
               type: 'string',
               format: 'date-time',
@@ -86,6 +103,17 @@ const options = {
               type: 'string',
               format: 'date-time',
               description: 'User last update timestamp'
+            },
+            links: {
+              type: 'object',
+              description: 'HATEOAS links',
+              properties: {
+                self: {
+                  type: 'string',
+                  description: 'Link to this user resource',
+                  example: '/api/users/1'
+                }
+              }
             }
           }
         },
