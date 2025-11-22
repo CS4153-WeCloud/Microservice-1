@@ -19,7 +19,7 @@ function toCamelCase(row) {
 }
 
 class User {
-  static async findAll(filters = {}, pagination = {}) {
+  static async findAll(filters = {}) {
     let query = 'SELECT * FROM users WHERE 1=1';
     const params = [];
     
@@ -42,38 +42,10 @@ class User {
     const sortOrder = filters.sortOrder || 'DESC';
     query += ` ORDER BY ${sortBy} ${sortOrder}`;
     
-    // Apply pagination
-    // Note: LIMIT and OFFSET must be integers, not parameterized
-    if (pagination.page && pagination.pageSize) {
-      const pageSize = parseInt(pagination.pageSize);
-      const offset = (parseInt(pagination.page) - 1) * pageSize;
-      query += ` LIMIT ${pageSize} OFFSET ${offset}`;
-    }
-    
     const [rows] = await db.query(query, params);
     return rows.map(toCamelCase);
   }
   
-  static async count(filters = {}) {
-    let query = 'SELECT COUNT(*) as total FROM users WHERE 1=1';
-    const params = [];
-    
-    if (filters.role) {
-      query += ' AND role = ?';
-      params.push(filters.role);
-    }
-    if (filters.homeArea) {
-      query += ' AND home_area = ?';
-      params.push(filters.homeArea);
-    }
-    if (filters.status) {
-      query += ' AND status = ?';
-      params.push(filters.status);
-    }
-    
-    const [rows] = await db.query(query, params);
-    return rows[0].total;
-  }
 
   static async findById(id) {
     const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
