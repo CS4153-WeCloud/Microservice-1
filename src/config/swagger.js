@@ -1,14 +1,45 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
-// get the server URL
-const getServerUrl = () => {
-  // if there is EXTERNAL_IP environment variable, use the external IP
-  if (process.env.EXTERNAL_IP) {
-    return `http://${process.env.EXTERNAL_IP}:3001`;
+// get server URLs - support multiple environments
+const getServers = () => {
+  const servers = [];
+  
+  // Cloud Run production URL (if set via environment variable)
+  if (process.env.CLOUD_RUN_URL) {
+    servers.push({
+      url: process.env.CLOUD_RUN_URL,
+      description: 'Production (Cloud Run)'
+    });
   }
   
-  // Default to localhost for development
-  return 'http://localhost:3001';
+  // Cloud Run: Auto-detect if K_SERVICE is set
+  if (process.env.K_SERVICE) {
+    // In Cloud Run, use the actual service URL
+    // This will be set via environment variable in deployment
+    const cloudRunUrl = process.env.CLOUD_RUN_URL || 'https://user-service-1081353560639.us-central1.run.app';
+    if (!servers.find(s => s.url === cloudRunUrl)) {
+      servers.push({
+        url: cloudRunUrl,
+        description: 'Production (Cloud Run)'
+      });
+    }
+  }
+  
+  // Local development or VM
+  if (process.env.EXTERNAL_IP) {
+    servers.push({
+      url: `http://${process.env.EXTERNAL_IP}:3001`,
+      description: 'Development (VM)'
+    });
+  }
+  
+  // Always include localhost for local development
+  servers.push({
+    url: 'http://localhost:3001',
+    description: 'Local Development'
+  });
+  
+  return servers;
 };
 
 const options = {
@@ -23,12 +54,7 @@ const options = {
         email: 'support@example.com'
       }
     },
-    servers: [
-      {
-        url: getServerUrl(),
-        description: process.env.NODE_ENV === 'production' ? 'Production server (GCP)' : 'Development server'
-      }
-    ],
+    servers: getServers(),
     tags: [
       {
         name: 'Users',
