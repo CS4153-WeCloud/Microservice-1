@@ -14,8 +14,41 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+// Swagger Documentation - dynamically set server URL based on request
+app.use('/api-docs', swaggerUi.serve, (req, res, next) => {
+  // Get the current request's protocol and host
+  const protocol = req.protocol || (req.headers['x-forwarded-proto'] || 'https').split(',')[0];
+  const host = req.get('host') || req.headers.host;
+  const baseUrl = `${protocol}://${host}`;
+  
+  // Clone specs and update server URLs dynamically
+  const dynamicSpecs = JSON.parse(JSON.stringify(specs));
+  
+  // Update or add the current server URL
+  if (!dynamicSpecs.servers) {
+    dynamicSpecs.servers = [];
+  }
+  
+  // Check if current URL already exists
+  const currentServerExists = dynamicSpecs.servers.some(s => s.url === baseUrl);
+  if (!currentServerExists) {
+    // Add current server as the first option (default)
+    dynamicSpecs.servers.unshift({
+      url: baseUrl,
+      description: 'Current Server'
+    });
+  } else {
+    // Move current server to first position
+    const index = dynamicSpecs.servers.findIndex(s => s.url === baseUrl);
+    if (index > 0) {
+      const server = dynamicSpecs.servers.splice(index, 1)[0];
+      dynamicSpecs.servers.unshift(server);
+    }
+  }
+  
+  // Setup Swagger UI with dynamic specs
+  swaggerUi.setup(dynamicSpecs)(req, res, next);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
