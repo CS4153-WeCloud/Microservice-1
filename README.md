@@ -1,230 +1,57 @@
-# User Service Microservice
+# Auth & User Service
 
-A RESTful microservice for user management with OpenAPI documentation and MySQL database integration.
+A RESTful microservice for user management with OpenAPI documentation, MySQL database integration, and Sprint 2 features.
+
+## Project: Columbia Point2Point Semester Shuttle
+
+This service handles user registration, login, and user profiles, storing basic commuter info such as home area and preferred departure time.
 
 ## Demo
 
-- Sprint 1 [link](https://www.youtube.com/watch?v=5IFi0l3WEvg)
+**Production URL**: https://user-service-1081353560639.us-central1.run.app  
+**API Documentation**: https://user-service-1081353560639.us-central1.run.app/api-docs
+**Video**:
 
 ## Features
 
 - ✅ Complete REST API (GET, POST, PUT, DELETE)
 - ✅ OpenAPI 3.0 documentation with Swagger UI
-- ✅ MySQL database integration
-- ✅ Health check endpoint
-- ✅ Ready for GCP VM deployment
-
-## Tech Stack
-
-- Node.js + Express
-- MySQL
-- Swagger/OpenAPI 3.0
-- Docker support
+- ✅ MySQL database integration (Cloud SQL)
+- ✅ Query Parameters: Filter and sort users by role, home area, status
+- ✅ Linked Data**: All responses include relative path links
+- ✅ HTTP 201 Created: POST methods return 201 status with Location header
+- ✅ Cloud Run Deployment: Deployed on Cloud Run with Cloud SQL Database A
 
 ## Quick Start
 
 ### Local Development
-
-1. Install dependencies:
 ```bash
 npm install
-```
-
-2. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your database credentials
-```
-
-3. Create database and tables (see database setup below)
-
-4. Start the server:
-```bash
+cp env.example .env
 npm start
+# Access: http://localhost:3001/api-docs
 ```
-
-5. Access the API:
-   - API Base: http://localhost:3001
-   - API Documentation: http://localhost:3001/api-docs
-   - Health Check: http://localhost:3001/health
-
-### VM Deployment (GCP)
-
-1. Create VM in GCP Console
-
-2. Follow the detailed setup steps in the "GCP VM Deployment" section below
-
-3. Access the API:
-   - API Base: http://<YOUR_VM_IP>:3001
-   - API Documentation: http://<YOUR_VM_IP>:3001/api-docs
-   - Health Check: http://<YOUR_VM_IP>:3001/health
 
 ## API Endpoints
 
-### Users Resource
-
 - `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get user by ID
-- `POST /api/users` - Create new user
+- `GET /api/users?role=student&home_area=Flushing` - Filter by role and home area
+- `GET /api/users/:id` - Get user by ID (includes links)
+- `POST /api/users` - Create new user (returns 201 Created with Location header)
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user
 
-### Example Requests
+**Query Parameters:** `role`, `home_area`, `status`, `sortBy`, `sortOrder`
 
-**Local Development:**
-```bash
-# Create a user
-curl -X POST http://localhost:3001/api/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "phone": "+1234567890",
-    "status": "active"
-  }'
-```
+## Deployment
 
-**VM Deployment:**
-```bash
-# Replace YOUR_VM_IP with your actual VM external IP
-curl -X POST http://<YOUR_VM_IP>:3001/api/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "phone": "+1234567890",
-    "status": "active"
-  }'
-```
+Deployed on **Cloud Run** using MySQL.
 
-## Database Setup
-
-The database schema is defined in the `database`. To set up locally:
-
-```bash
-mysql -u root -p < ../database/schema.sql
-```
-
-## GCP VM Deployment
-
-### Quick Setup for Team Members
-
-**1. Create VM in GCP Console**
-- Go to [GCP Console](https://console.cloud.google.com/)
-- Create VM: `user-service-vm`, `e2-medium`, `us-central1-c`
-- Enable HTTP traffic
-
-**2. SSH into VM**
-```bash
-gcloud compute ssh user-service-vm --zone=us-central1-c
-```
-
-**3. Install & Setup**
-```bash
-# Install software
-sudo apt-get update
-sudo apt-get install -y git default-mysql-server
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Start MySQL
-sudo systemctl start mysql
-sudo systemctl enable mysql
-
-# Clone repo
-git clone https://github.com/CS4153-WeCloud/Microservice-1.git
-cd Microservice-1
-
-# Install dependencies
-npm install
-
-# Setup database
-sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS user_service_db;"
-sudo mysql -u root -e "CREATE USER IF NOT EXISTS 'user_service'@'localhost' IDENTIFIED BY 'password123';"
-sudo mysql -u root -e "GRANT ALL PRIVILEGES ON user_service_db.* TO 'user_service'@'localhost';"
-sudo mysql -u root -e "FLUSH PRIVILEGES;"
-sudo mysql -u root < database/schema.sql
-
-# Configure environment
-cp env.example .env
-# Edit .env with: DB_HOST=localhost, DB_USER=user_service, DB_PASSWORD=password123, DB_NAME=user_service_db
-
-# Start service
-npm start
-```
-
-**4. Configure Firewall**
-- GCP Console > VPC network > Firewall
-- Create rule: `allow-user-service`, TCP:3001, Target: `http-server`
-
-**5. Set External IP and Test**
-```bash
-# Get your VM's external IP
-curl ifconfig.me
-
-# Set the external IP environment variable
-export EXTERNAL_IP=$(curl -s ifconfig.me)
-
-# Start the service
-npm start
-
-# Test API (replace with your actual VM IP)
-curl http://$EXTERNAL_IP:3001/health
-# Open in browser: http://$EXTERNAL_IP:3001/api-docs
-```
-
-**Important Notes:**
-- Each team member will have a different VM external IP
-- The service will automatically detect if it's running on a VM and show the correct URLs
-- Make sure to configure the firewall rule for port 3001
-
-## Project Structure
-
-```
-microservice-1-user/
-├── database/
-│   ├── schema.sql           # sample user schema for API testing
-├── src/
-│   ├── config/
-│   │   ├── database.js      # MySQL connection pool
-│   │   └── swagger.js       # OpenAPI configuration
-│   ├── models/
-│   │   └── User.js          # User model
-│   ├── routes/
-│   │   └── userRoutes.js    # User API routes
-│   └── server.js            # Express app entry point
-├── .env.example
-├── package.json
-└── README.md
-```
+**Production URL**: https://user-service-1081353560639.us-central1.run.app
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Server port | 3001 |
-| DB_HOST | MySQL host | localhost |
-| DB_USER | MySQL user | root |
-| DB_PASSWORD | MySQL password | |
-| DB_NAME | Database name | user_service_db |
-| DB_PORT | MySQL port | 3306 |
+**Local:** `PORT`, `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`  
+**Cloud Run:** `PORT`, `INSTANCE_CONNECTION_NAME`, `DB_SOCKET_PATH`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 
-## Development Team Notes
-
-- OpenAPI documentation is auto-generated from JSDoc comments in routes
-- Database connection is pooled for better performance
-- All endpoints include error handling
-- Health check endpoint for monitoring
-- Ready for horizontal scaling
-
-## Next Steps
-
-1. Add authentication/authorization
-2. Implement rate limiting
-3. Add request validation middleware
-4. Set up logging (Winston/Morgan)
-5. Add unit and integration tests
-6. Implement caching (Redis)
-
+See `env.example` for details.
