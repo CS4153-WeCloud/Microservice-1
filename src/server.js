@@ -16,38 +16,46 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Swagger Documentation - dynamically set server URL based on request
 app.use('/api-docs', swaggerUi.serve, (req, res, next) => {
-  // Get the current request's protocol and host
-  const protocol = req.protocol || (req.headers['x-forwarded-proto'] || 'https').split(',')[0];
-  const host = req.get('host') || req.headers.host;
-  const baseUrl = `${protocol}://${host}`;
-  
-  // Clone specs and update server URLs dynamically
-  const dynamicSpecs = JSON.parse(JSON.stringify(specs));
-  
-  // Update or add the current server URL
-  if (!dynamicSpecs.servers) {
-    dynamicSpecs.servers = [];
-  }
-  
-  // Check if current URL already exists
-  const currentServerExists = dynamicSpecs.servers.some(s => s.url === baseUrl);
-  if (!currentServerExists) {
-    // Add current server as the first option (default)
-    dynamicSpecs.servers.unshift({
+  try {
+    // Get the current request's protocol and host
+    // Cloud Run sets x-forwarded-proto header
+    let protocol = 'https';
+    if (req.headers['x-forwarded-proto']) {
+      protocol = req.headers['x-forwarded-proto'].split(',')[0].trim();
+    } else if (req.protocol === 'http' || req.secure === false) {
+      protocol = 'http';
+    }
+    
+    const host = req.get('host') || req.headers.host || 'localhost:3001';
+    const baseUrl = `${protocol}://${host}`;
+    
+    // Clone specs to avoid modifying the original
+    const dynamicSpecs = JSON.parse(JSON.stringify(specs));
+    
+    // Ensure servers array exists
+    if (!dynamicSpecs.servers || !Array.isArray(dynamicSpecs.servers)) {
+      dynamicSpecs.servers = [];
+    }
+    
+    // Replace all servers with just the current one (simplest approach)
+    dynamicSpecs.servers = [{
       url: baseUrl,
       description: 'Current Server'
+    }];
+    
+    // Setup Swagger UI with dynamic specs
+    const swaggerUiHandler = swaggerUi.setup(dynamicSpecs, {
+      swaggerOptions: {
+        persistAuthorization: true
+      }
     });
-  } else {
-    // Move current server to first position
-    const index = dynamicSpecs.servers.findIndex(s => s.url === baseUrl);
-    if (index > 0) {
-      const server = dynamicSpecs.servers.splice(index, 1)[0];
-      dynamicSpecs.servers.unshift(server);
-    }
+    
+    swaggerUiHandler(req, res, next);
+  } catch (error) {
+    console.error('Swagger UI setup error:', error);
+    // Fallback to default setup
+    swaggerUi.setup(specs)(req, res, next);
   }
-  
-  // Setup Swagger UI with dynamic specs
-  swaggerUi.setup(dynamicSpecs)(req, res, next);
 });
 
 // Health check endpoint
