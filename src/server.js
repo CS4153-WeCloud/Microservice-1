@@ -21,7 +21,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'UP', 
-    service: 'user-service',
+    service: 'auth-user-service',
     timestamp: new Date().toISOString()
   });
 });
@@ -32,7 +32,7 @@ app.use('/api/users', userRoutes);
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'User Service API',
+    message: 'Auth & User Service API',
     version: '1.0.0',
     documentation: '/api-docs'
   });
@@ -48,7 +48,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`User Service running on port ${PORT}`);
+  console.log(`Auth & User Service running on port ${PORT}`);
   
   // if there is EXTERNAL_IP environment variable, use the external IP
   if (process.env.EXTERNAL_IP) {

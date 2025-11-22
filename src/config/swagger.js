@@ -15,9 +15,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'User Service API',
+      title: 'Auth & User Service API',
       version: '1.0.0',
-      description: 'RESTful API for User Management',
+      description: 'RESTful API for User Management - Auth & User Service',
       contact: {
         name: 'API Support',
         email: 'support@example.com'
