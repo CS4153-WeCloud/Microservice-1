@@ -288,10 +288,22 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Check if email is being changed and if it's already taken by another user
+    if (req.body.email && req.body.email !== user.email) {
+      const existingUser = await User.findByEmail(req.body.email);
+      if (existingUser && existingUser.id !== parseInt(req.params.id)) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+    }
+
     const updatedUser = await User.update(req.params.id, req.body);
     res.json(addUserLinks(updatedUser));
   } catch (error) {
     console.error(`PUT /api/users/${req.params.id} error:`, error);
+    // Handle duplicate email error from database
+    if (error.code === 'ER_DUP_ENTRY' && error.message.includes('email')) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
     res.status(500).json({ error: 'Failed to update user', message: error.message });
   }
 });

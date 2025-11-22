@@ -27,25 +27,26 @@ function normalizeTime(timeValue) {
     return timeValue;
   }
   
-  // If ISO format (e.g., "18:20:56.019Z" or "2025-11-22T18:20:56.019Z")
+  // Extract time part using regex (handles formats like "18:22:48.343Z" or "2025-11-22T18:20:56.019Z")
+  const timeMatch = timeValue.match(/(\d{2}):(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    return timeMatch[0]; // Returns "HH:mm:ss"
+  }
+  
+  // Try parsing as Date if regex fails
   try {
     const date = new Date(timeValue);
     if (!isNaN(date.getTime())) {
-      // Extract time part in HH:mm:ss format
       const hours = String(date.getUTCHours()).padStart(2, '0');
       const minutes = String(date.getUTCMinutes()).padStart(2, '0');
       const seconds = String(date.getUTCSeconds()).padStart(2, '0');
       return `${hours}:${minutes}:${seconds}`;
     }
   } catch (e) {
-    // If parsing fails, try to extract time part directly
-    const timeMatch = timeValue.match(/(\d{2}):(\d{2}):(\d{2})/);
-    if (timeMatch) {
-      return timeMatch[0];
-    }
+    // Ignore parsing errors
   }
   
-  return timeValue; // Return as is if can't parse
+  return null; // Return null if can't parse
 }
 
 class User {
