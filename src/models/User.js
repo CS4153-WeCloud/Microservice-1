@@ -43,10 +43,11 @@ class User {
     query += ` ORDER BY ${sortBy} ${sortOrder}`;
     
     // Apply pagination
+    // Note: LIMIT and OFFSET must be integers, not parameterized
     if (pagination.page && pagination.pageSize) {
-      const offset = (pagination.page - 1) * pagination.pageSize;
-      query += ' LIMIT ? OFFSET ?';
-      params.push(pagination.pageSize, offset);
+      const pageSize = parseInt(pagination.pageSize);
+      const offset = (parseInt(pagination.page) - 1) * pageSize;
+      query += ` LIMIT ${pageSize} OFFSET ${offset}`;
     }
     
     const [rows] = await db.query(query, params);
