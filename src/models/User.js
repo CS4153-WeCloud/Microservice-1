@@ -18,6 +18,36 @@ function toCamelCase(row) {
   };
 }
 
+// Helper function to normalize time format to HH:mm:ss
+function normalizeTime(timeValue) {
+  if (!timeValue) return null;
+  
+  // If already in HH:mm:ss format, return as is
+  if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
+    return timeValue;
+  }
+  
+  // If ISO format (e.g., "18:20:56.019Z" or "2025-11-22T18:20:56.019Z")
+  try {
+    const date = new Date(timeValue);
+    if (!isNaN(date.getTime())) {
+      // Extract time part in HH:mm:ss format
+      const hours = String(date.getUTCHours()).padStart(2, '0');
+      const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    }
+  } catch (e) {
+    // If parsing fails, try to extract time part directly
+    const timeMatch = timeValue.match(/(\d{2}):(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      return timeMatch[0];
+    }
+  }
+  
+  return timeValue; // Return as is if can't parse
+}
+
 class User {
   static async findAll(filters = {}) {
     let query = 'SELECT * FROM users WHERE 1=1';
@@ -59,9 +89,10 @@ class User {
 
   static async create(userData) {
     const { email, firstName, lastName, phone, status, role, homeArea, preferredDepartureTime } = userData;
+    const normalizedTime = normalizeTime(preferredDepartureTime);
     const [result] = await db.query(
       'INSERT INTO users (email, first_name, last_name, phone, status, role, home_area, preferred_departure_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [email, firstName, lastName, phone || null, status || 'active', role || 'student', homeArea || null, preferredDepartureTime || null]
+      [email, firstName, lastName, phone || null, status || 'active', role || 'student', homeArea || null, normalizedTime]
     );
     return this.findById(result.insertId);
   }
@@ -78,7 +109,11 @@ class User {
     if (status !== undefined) { updateFields.push('status = ?'); updateValues.push(status); }
     if (role !== undefined) { updateFields.push('role = ?'); updateValues.push(role); }
     if (homeArea !== undefined) { updateFields.push('home_area = ?'); updateValues.push(homeArea); }
-    if (preferredDepartureTime !== undefined) { updateFields.push('preferred_departure_time = ?'); updateValues.push(preferredDepartureTime); }
+    if (preferredDepartureTime !== undefined) { 
+      const normalizedTime = normalizeTime(preferredDepartureTime);
+      updateFields.push('preferred_departure_time = ?'); 
+      updateValues.push(normalizedTime); 
+    }
     
     updateFields.push('updated_at = CURRENT_TIMESTAMP');
     updateValues.push(id);
