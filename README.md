@@ -8,9 +8,10 @@ This service handles user registration, login, and user profiles, storing basic 
 
 ## Demo
 
-**Production URL**: https://user-service-1081353560639.us-central1.run.app  
-**API Documentation**: https://user-service-1081353560639.us-central1.run.app/api-docs
-**Video**:
+- **Video**: https://www.youtube.com/watch?v=4Hm1THJjvkU
+- **Production URL**: https://user-service-1081353560639.us-central1.run.app  
+- **API Documentation**: https://user-service-1081353560639.us-central1.run.app/api-docs
+
 
 ## Features
 
