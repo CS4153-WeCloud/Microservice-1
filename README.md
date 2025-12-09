@@ -12,9 +12,7 @@ This service handles user registration, login, and user profiles, storing basic 
 - **Production URL**: https://user-service-1081353560639.us-central1.run.app  
 - **API Documentation**: https://user-service-1081353560639.us-central1.run.app/api-docs
 
-
 ## Features
-
 - ✅ Complete REST API (GET, POST, PUT, DELETE)
 - ✅ OpenAPI 3.0 documentation with Swagger UI
 - ✅ MySQL database integration (Cloud SQL)
@@ -23,9 +21,9 @@ This service handles user registration, login, and user profiles, storing basic 
 - ✅ HTTP 201 Created: POST methods return 201 status with Location header
 - ✅ Cloud Run Deployment: Deployed on Cloud Run with Cloud SQL Database A
 
-## Quick Start
+# Quick Start
 
-### Local Development
+## Local Development
 ```bash
 npm install
 cp env.example .env
