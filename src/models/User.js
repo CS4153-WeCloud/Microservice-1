@@ -50,6 +50,10 @@ function normalizeTime(timeValue) {
 }
 
 class User {
+  /**
+   * Find all users with filtering, sorting, and pagination
+   * Supports: role, homeArea, status, sortBy, sortOrder, page, page_size
+   */
   static async findAll(filters = {}) {
     let query = 'SELECT * FROM users WHERE 1=1';
     const params = [];
@@ -73,8 +77,46 @@ class User {
     const sortOrder = filters.sortOrder || 'DESC';
     query += ` ORDER BY ${sortBy} ${sortOrder}`;
     
+    // Get total count for pagination
+    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+    const [countResult] = await db.query(countQuery, params);
+    const totalCount = countResult[0].total;
+    
+    // Apply pagination
+    const page = parseInt(filters.page) || 1;
+    const pageSize = parseInt(filters.page_size) || 20;
+    const offset = (page - 1) * pageSize;
+    
+    query += ' LIMIT ? OFFSET ?';
+    params.push(pageSize, offset);
+    
     const [rows] = await db.query(query, params);
-    return rows.map(toCamelCase);
+    const users = rows.map(toCamelCase);
+    
+    // Return paginated response
+    const totalPages = Math.ceil(totalCount / pageSize);
+    return {
+      data: users,
+      pagination: {
+        totalCount,
+        page,
+        pageSize,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+        links: {
+          self: `/api/users?page=${page}&page_size=${pageSize}`,
+          first: `/api/users?page=1&page_size=${pageSize}`,
+          last: `/api/users?page=${totalPages}&page_size=${pageSize}`,
+          next: page < totalPages 
+            ? `/api/users?page=${page + 1}&page_size=${pageSize}` 
+            : null,
+          prev: page > 1 
+            ? `/api/users?page=${page - 1}&page_size=${pageSize}` 
+            : null
+        }
+      }
+    };
   }
   
 

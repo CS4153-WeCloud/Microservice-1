@@ -18,9 +18,9 @@ function addUserLinks(user) {
  * @swagger
  * /api/users:
  *   get:
- *     summary: Get all users with filtering and sorting
+ *     summary: Get all users with filtering, sorting, and pagination
  *     tags: [Users]
- *     description: Retrieve a list of users with optional filtering and sorting
+ *     description: Retrieve a paginated list of users with optional filtering and sorting
  *     parameters:
  *       - in: query
  *         name: role
@@ -52,15 +52,49 @@ function addUserLinks(user) {
  *           enum: [ASC, DESC]
  *           default: DESC
  *         description: Sort order
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: page_size
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of items per page
  *     responses:
  *       200:
- *         description: List of users retrieved successfully
+ *         description: List of users retrieved successfully with pagination
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalCount:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     pageSize:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     hasNext:
+ *                       type: boolean
+ *                     hasPrev:
+ *                       type: boolean
+ *                     links:
+ *                       type: object
  *       500:
  *         description: Server error
  *         content:
@@ -70,8 +104,8 @@ function addUserLinks(user) {
  */
 router.get('/', async (req, res) => {
   try {
-    // Extract query parameters
-    const { role, home_area, status, sortBy, sortOrder } = req.query;
+    // Extract query parameters including pagination
+    const { role, home_area, status, sortBy, sortOrder, page, page_size } = req.query;
     
     // Build filters
     const filters = {};
@@ -80,17 +114,27 @@ router.get('/', async (req, res) => {
     if (status) filters.status = status;
     if (sortBy) filters.sortBy = sortBy;
     if (sortOrder) filters.sortOrder = sortOrder.toUpperCase();
+    if (page) filters.page = page;
+    if (page_size) filters.page_size = page_size;
     
-    // Get users
-    const users = await User.findAll(filters);
+    // Get paginated users
+    const result = await User.findAll(filters);
     
     // Add links to each user
-    const usersWithLinks = users.map(addUserLinks);
+    const usersWithLinks = result.data.map(addUserLinks);
     
-    res.json(usersWithLinks);
+    res.json({
+      success: true,
+      data: usersWithLinks,
+      pagination: result.pagination
+    });
   } catch (error) {
     console.error('GET /api/users error:', error);
-    res.status(500).json({ error: 'Failed to fetch users', message: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch users', 
+      message: error.message 
+    });
   }
 });
 
