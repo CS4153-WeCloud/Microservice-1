@@ -89,9 +89,33 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Debug: Log environment variables at startup
+console.log('🔍 Environment check:', {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET',
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET',
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+  SESSION_SECRET: process.env.SESSION_SECRET ? 'SET' : 'NOT SET'
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+
+// Debug route to test if auth routes are registered
+app.get('/debug/auth', (req, res) => {
+  res.json({
+    message: 'Auth routes debug',
+    timestamp: new Date().toISOString(),
+    env: {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET',
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET',
+      GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+      JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+      SESSION_SECRET: process.env.SESSION_SECRET ? 'SET' : 'NOT SET'
+    }
+  });
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
