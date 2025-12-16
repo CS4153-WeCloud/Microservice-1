@@ -31,6 +31,10 @@ const options = {
     ],
     tags: [
       {
+        name: 'Authentication',
+        description: 'Authentication and authorization endpoints'
+      },
+      {
         name: 'Users',
         description: 'User management endpoints'
       },
@@ -40,6 +44,14 @@ const options = {
       }
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT token obtained from Google OAuth login. Format: Bearer <token>'
+        }
+      },
       schemas: {
         User: {
           type: 'object',
@@ -114,6 +126,32 @@ const options = {
                   example: '/api/users/1'
                 }
               }
+            },
+            googleId: {
+              type: 'string',
+              description: 'Google OAuth ID (if authenticated via Google)',
+              example: '123456789012345678901'
+            }
+          }
+        },
+        AuthResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            token: {
+              type: 'string',
+              description: 'JWT token for authenticated requests',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+            },
+            user: {
+              $ref: '#/components/schemas/User'
+            },
+            message: {
+              type: 'string',
+              example: 'Authentication successful'
             }
           }
         },

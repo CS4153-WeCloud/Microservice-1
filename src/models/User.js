@@ -6,6 +6,7 @@ function toCamelCase(row) {
   return {
     id: row.id,
     email: row.email,
+    googleId: row.google_id,
     firstName: row.first_name,
     lastName: row.last_name,
     phone: row.phone,
@@ -130,22 +131,28 @@ class User {
     return toCamelCase(rows[0]);
   }
 
+  static async findByGoogleId(googleId) {
+    const [rows] = await db.query('SELECT * FROM users WHERE google_id = ?', [googleId]);
+    return toCamelCase(rows[0]);
+  }
+
   static async create(userData) {
-    const { email, firstName, lastName, phone, status, role, homeArea, preferredDepartureTime } = userData;
+    const { email, googleId, firstName, lastName, phone, status, role, homeArea, preferredDepartureTime } = userData;
     const normalizedTime = normalizeTime(preferredDepartureTime);
     const [result] = await db.query(
-      'INSERT INTO users (email, first_name, last_name, phone, status, role, home_area, preferred_departure_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [email, firstName, lastName, phone || null, status || 'active', role || 'student', homeArea || null, normalizedTime]
+      'INSERT INTO users (email, google_id, first_name, last_name, phone, status, role, home_area, preferred_departure_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [email, googleId || null, firstName, lastName, phone || null, status || 'active', role || 'student', homeArea || null, normalizedTime]
     );
     return this.findById(result.insertId);
   }
 
   static async update(id, userData) {
-    const { email, firstName, lastName, phone, status, role, homeArea, preferredDepartureTime } = userData;
+    const { email, googleId, firstName, lastName, phone, status, role, homeArea, preferredDepartureTime } = userData;
     const updateFields = [];
     const updateValues = [];
     
     if (email !== undefined) { updateFields.push('email = ?'); updateValues.push(email); }
+    if (googleId !== undefined) { updateFields.push('google_id = ?'); updateValues.push(googleId); }
     if (firstName !== undefined) { updateFields.push('first_name = ?'); updateValues.push(firstName); }
     if (lastName !== undefined) { updateFields.push('last_name = ?'); updateValues.push(lastName); }
     if (phone !== undefined) { updateFields.push('phone = ?'); updateValues.push(phone); }
