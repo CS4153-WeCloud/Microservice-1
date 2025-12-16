@@ -117,6 +117,33 @@ app.get('/debug/auth', (req, res) => {
   });
 });
 
+// Debug route to check database schema
+app.get('/debug/db', async (req, res) => {
+  try {
+    const db = require('./config/database');
+    const [rows] = await db.query('DESCRIBE users');
+    const columns = rows.map(row => ({
+      Field: row.Field,
+      Type: row.Type,
+      Null: row.Null,
+      Key: row.Key,
+      Default: row.Default,
+      Extra: row.Extra
+    }));
+
+    res.json({
+      message: 'Database schema check',
+      columns: columns,
+      hasGoogleId: columns.some(col => col.Field === 'google_id')
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Database error',
+      message: error.message
+    });
+  }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
