@@ -51,27 +51,25 @@ router.get('/google/callback',
       // Generate JWT token for the authenticated user
       const token = generateToken(req.user);
       
-      // Return token and user info
-      res.json({
-        success: true,
-        message: 'Authentication successful',
-        token: token,
-        user: {
-          id: req.user.id,
-          email: req.user.email,
-          firstName: req.user.firstName,
-          lastName: req.user.lastName,
-          role: req.user.role,
-          status: req.user.status
-        }
-      });
+      // Frontend URL - for OAuth redirect
+      const frontendURL = process.env.FRONTEND_URL || 'http://34.170.21.219';
+      
+      // Encode user data for URL
+      const userData = encodeURIComponent(JSON.stringify({
+        id: req.user.id,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        role: req.user.role,
+        status: req.user.status
+      }));
+      
+      // Redirect to frontend with token and user data
+      res.redirect(`${frontendURL}/?oauth=success&token=${token}&user=${userData}`);
     } catch (error) {
       console.error('Token generation error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate token',
-        message: error.message
-      });
+      const frontendURL = process.env.FRONTEND_URL || 'http://34.170.21.219';
+      res.redirect(`${frontendURL}/?oauth=error&message=${encodeURIComponent(error.message)}`);
     }
   }
 );
